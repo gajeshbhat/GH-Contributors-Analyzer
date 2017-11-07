@@ -4,6 +4,8 @@ import sys
 from BeautifulSoup import BeautifulSoup
 from pymongo import MongoClient
 from pprint import pprint
+from subprocess import call
+from os import getcwd
 
 class Topic_Reference_Dump:
     client = MongoClient('localhost',27017)
@@ -112,6 +114,9 @@ class Topic_Reference_Dump:
         def refresh_topic_details(self):
             self.client.topics_ref.topics_details.delete_many({})
             self.parse_topic_info()
+            return True
+        
+        def get_repo_info(self):
             return True
     except:
         print Exception
