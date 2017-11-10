@@ -18,7 +18,7 @@ class Topic_Reference_Dump:
     try:
         def get_topics_details(self):
             summary_page = requests.get("https://github.com/topics")
-            content_soup = BeautifulSoup(summary_page.content)
+            content_soup = BeautifulSoup(summary_page.content,"html.parser")
             div_soup = content_soup.findAll('li',{'class':'py-4 border-bottom'})
 
             if(summary_page.status_code != 200):
@@ -69,7 +69,7 @@ class Topic_Reference_Dump:
             for topic in topic_dicts:  
                 topic_parse_link = str(topic['link'])
                 topics_page = requests.get(topic_parse_link)
-                topics_page_soup = BeautifulSoup(topics_page.content)
+                topics_page_soup = BeautifulSoup(topics_page.content,"html.parser")
                 outer_div_soup = topics_page_soup.findAll('article',{'class':'border-bottom border-gray-light py-4'})
                 
                 repo_list = list()
