@@ -9,6 +9,7 @@ from subprocess import call
 from os import getcwd
 from selenium.webdriver.firefox.options import Options
 from selenium import webdriver
+from selenium import common
 
 class Topic_Reference_Dump:
     client = MongoClient('localhost',27017)
@@ -125,7 +126,7 @@ class Topic_Reference_Dump:
             for contributor in all_contributors_soup:
                 contributor_dict={
                 "user_id":contributor.findNext('a').text,
-                "profile_link":"https://github.com/" + contributor.findNext('a',{'class':'text-normal'})['href'],
+                "profile_link":"https://github.com" + contributor.findNext('a',{'class':'text-normal'})['href'],
                 "rank":contributor.findNext('span',{'class':'f5 text-normal text-gray-light float-right'}).text,
                 "total_contributions":contributor.findNext('a',{'class':'link-gray text-normal'}).text,
                 "total_commits_url":contributor.findNext('a',{'class':'link-gray text-normal'})['href'],
@@ -142,9 +143,17 @@ class Topic_Reference_Dump:
             
             else:
                 browser_options = Options() # Options Object from the Selenium driver.
-                browser_options.add_argument('-headless') # No GUI More refs at : https://developer.mozilla.org/en-US/Firefox/Headless_mode#Selenium_in_python
+                browser_options.add_argument('-headless') # No GUI. More references at : https://developer.mozilla.org/en-US/Firefox/Headless_mode#Selenium_in_python
                 browser = webdriver.Firefox(executable_path='geckodriver', firefox_options=browser_options)
-                browser.get(str(url+"/graphs/contributors"))
+                
+                working = False
+                while working is False:
+                    try:
+                        browser.get(str(url+"/graphs/contributors")) #Handle Webdriver Selenium Exception.
+                        working = True
+                    except common.exceptions.WebDriverException:
+                        working = False
+
                 loaded_page_soup = BeautifulSoup(browser.page_source, "html.parser")
                 browser.quit()
                 return loaded_page_soup
@@ -154,7 +163,15 @@ class Topic_Reference_Dump:
                 print "Enter a valid url"
                 return False
             else:
-                repo_page = requests.get(url)
+                working = False
+                
+                while working is False: #Handling DNS address exceptions.
+                    try:
+                        repo_page = requests.get(url)
+                        working = True
+                    except requests.exceptions.ConnectionError:
+                        working = False
+
                 repo_page_soup = BeautifulSoup(repo_page.content,"lxml")
                 all_repo_info = repo_page_soup.find('ul',{'class':'numbers-summary'}).findAll('li')
                 all_repo_list = list()
@@ -163,11 +180,17 @@ class Topic_Reference_Dump:
                     all_repo_list.append(value.findNext('span',{'class':'num text-emphasized'}))
                 
                 TAG_RE = re.compile(r'<[^>]+>') #Regular exp to cleanup the span tag
-
+                
+                desc_data = ''
+                if repo_page_soup.find('span',{'itemprop':'about'}) == None:
+                    desc_data = 'N/A'
+                else:
+                    desc_data = str(repo_page_soup.find('span',{'itemprop':'about'}).text).strip()
+                
                 repo_info_dict={
                     "repo_name":str(repo_page_soup.find('strong',{'itemprop':'name'}).find('a').text),
                     "repo_link":url,
-                    "description":str(repo_page_soup.find('span',{'itemprop':'about'}).text).strip(),
+                    "description":desc_data,
                     "total_commits":TAG_RE.sub('',str(all_repo_list[0])).strip(),
                     "total_branches":TAG_RE.sub('',str(all_repo_list[1])).strip(),
                     "total_releases":TAG_RE.sub('',str(all_repo_list[2])).strip(),
@@ -177,12 +200,21 @@ class Topic_Reference_Dump:
                 return repo_info_dict
 
         def get_contributors_details(self):
-            all_topics = self.client.topics_ref.topics_details.find({})
-            
+           
+            working_pymongo_find = False #Handling Pymongo exception
+            while working_pymongo_find is False:
+                try:
+                    all_topics = self.client.topics_ref.topics_details.find({})
+                    working_pymongo_find = True
+                except:
+                    working_pymongo_find = False
+           
+            flag = False
+
             for topic in all_topics:
                 all_topic_repos = topic['repos']
                 repo_contributor_list = list()
-                
+
                 for repo in all_topic_repos:
                     repo_link = repo['link']
                     repo_dict = self.get_general_repo_information(url=repo_link)
@@ -191,13 +223,19 @@ class Topic_Reference_Dump:
                     repo_dict['top_contributors'] = top_contributors_list
                     repo_contributor_list.append(repo_dict)
                 
-                topic_contrib ={
-                    "topic_name":topic["topic_name"],
-                    "top_developers": repo_contributor_list
-                }
-                
-                self.client.contrib_details.top_contributors.insert(topic_contrib)
-                
+                    topic_contrib ={
+                        "topic_name":topic["topic_name"],
+                        "top_developers": repo_contributor_list
+                    }
+                    
+                    working_pymongo_insert = False
+                    while working_pymongo_insert is False:
+                        try:
+                            self.client.contrib_details.top_contributors.insert(topic_contrib)
+                            working_pymongo_insert = True
+                        except:
+                            working_pymongo_insert = False
+
                 print topic['topic_name'] + " is dumped."
             return True
     except:
