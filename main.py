@@ -1,5 +1,7 @@
-from topic_refrence_dump import Topic_Reference_Dump
+from multithread import refresh_contributor_details, refresh_topic_list, refresh_topic_details
 
-dump_obj = Topic_Reference_Dump()
-
-dump_obj.get_contributors_details()
+refresh_topic_list()
+print "Topic list refreshed"
+refresh_topic_details()
+print "Topic details refreshed"
+refresh_contributor_details()
