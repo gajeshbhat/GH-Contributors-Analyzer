@@ -16,26 +16,6 @@ client = MongoClient('localhost',27017) # Mongo access client
 reload(sys)
 sys.setdefaultencoding('utf8') # Prevent unicode error
 
-segment_0_topics = list()
-segment_1_topics = list()
-segment_2_topics = list()
-segment_3_topics = list()
-
-def get_topic_slices():
-    all_topics = client.topics_ref.topics_details.find({}).batch_size(16)
-    idx = int(0)
-    for topic in all_topics:
-        if idx >= 0 and idx <=25:
-            segment_0_topics.append(topic)
-        elif idx > 25 and idx <= 50:
-            segment_1_topics.append(topic)
-        elif idx > 50 and idx <=75:
-            segment_2_topics.append(topic)
-        else:
-            segment_3_topics.append(topic)
-        idx+=1
-    return True
-
 def get_topics_details():
     summary_page = requests.get("https://github.com/topics")
     content_soup = BeautifulSoup(summary_page.content,"html.parser")
@@ -215,7 +195,7 @@ def get_general_repo_information(url=None):
 
             return repo_info_dict
 
-def get_top_contributor_info(topic,all_topic_repos):
+def get_top_contributor_info(topic_name,all_topic_repos):
     repo_contributor_list = list()
     
     for repo in all_topic_repos:
@@ -223,7 +203,7 @@ def get_top_contributor_info(topic,all_topic_repos):
         repo_dict = get_general_repo_information(url=repo_link)
         contributor_page_soup = get_loading_page_data(url=repo_link)
         top_contributors_list = parse_contributors_data(contributor_page_soup)
-        print top_contributors_list
+        
         if top_contributors_list == None:
             top_contributors_list = []
 
@@ -231,75 +211,18 @@ def get_top_contributor_info(topic,all_topic_repos):
         repo_contributor_list.append(repo_dict)
     
     topic_contrib ={
-    "topic_name":topic["topic_name"],
+    "topic_name":topic_name,
     "top_developers": repo_contributor_list
     }
     
     return topic_contrib
 
-def get_contributors_details_segment_0():
-    all_topics =  segment_0_topics 
-            
+def get_contributors_details():
+    all_topics_mongo_cursor = client.topics_ref.topics_details.find()
+    all_topics = list(all_topics_mongo_cursor)
     for topic in all_topics:
         all_topic_repos = topic['repos']
-        topic_document = get_top_contributor_info(topic,topic['repos'])
+        topic_document = get_top_contributor_info(topic['topic_name'],topic['repos'])
         segment_0_MongoClnt = MongoClient('localhost',27017)
         segment_0_MongoClnt.contrib_details.top_contributors_segment_0.insert(topic_document)
         print topic['topic_name'] + " is dumped."
-
-    return True
-
-def get_contributors_details_segment_1():
-    all_topics =  segment_1_topics 
-            
-    for topic in all_topics:
-        all_topic_repos = topic['repos']
-        topic_document = get_top_contributor_info(topic,topic['repos'])
-        segment_1_MongoClnt = MongoClient('localhost',27017)
-        segment_1_MongoClnt.contrib_details.top_contributors_segment_1.insert(topic_document)
-
-        print topic['topic_name'] + " is dumped."
-    return True
-       
-def get_contributors_details_segment_2():
-    all_topics =  segment_2_topics 
-         
-    for topic in all_topics:
-        all_topic_repos = topic['repos']
-        topic_document = get_top_contributor_info(topic,topic['repos'])
-        segment_2_MongoClnt = MongoClient('localhost',27017)
-        segment_2_MongoClnt.contrib_details.top_contributors_segment_2.insert(topic_document)
-
-        print topic['topic_name'] + " is dumped."
-    return True
-
-def get_contributors_details_segment_3():
-    all_topics =  segment_3_topics 
-            
-    for topic in all_topics:
-        all_topic_repos = topic['repos']
-        topic_document = get_top_contributor_info(topic,topic['repos'])
-        segment_3_MongoClnt = MongoClient('localhost',27017)
-        segment_3_MongoClnt.contrib_details.top_contributors_segment_3.insert(topic_document)
-
-        print topic['topic_name'] + " is dumped."
-    return True
-
-def refresh_contributor_details():
-    get_topic_slices()
-
-    p0= Process(target=get_contributors_details_segment_0)
-    p0.start()
-    print "Started 0th Process."
-
-    p1= Process(target=get_contributors_details_segment_1)
-    p1.start()
-    print "Started 1st Process."
-
-    p2= Process(target=get_contributors_details_segment_2)
-    p2.start()
-    print "Started 2nd Process."
-
-    p3= Process(target=get_contributors_details_segment_3)
-    p3.start()
-    print "Started 3rd Process."  
