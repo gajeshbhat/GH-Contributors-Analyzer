@@ -43,7 +43,7 @@ def get_top_devs_segment1():
 
 def get_top_devs_segment2():
   client1 = MongoClient('localhost',27017)
-  for topic in client1.topics_ref.topics_details.find()[0:28]:
+  for topic in client1.topics_ref.topics_details.find()[28:56]:
     topic_repos = topic['repos']
     top_dev_list = list()
     
@@ -63,7 +63,7 @@ def get_top_devs_segment2():
 
 def get_top_devs_segment3():
   client2 = MongoClient('localhost',27017)
-  for topic in client2.topics_ref.topics_details.find()[0:28]:
+  for topic in client2.topics_ref.topics_details.find()[56:84]:
     topic_repos = topic['repos']
     top_dev_list = list()
     
@@ -83,7 +83,7 @@ def get_top_devs_segment3():
 
 def get_top_devs_segment4():
   client3 = MongoClient('localhost',27017)
-  for topic in client3.topics_ref.topics_details.find()[0:28]:
+  for topic in client3.topics_ref.topics_details.find()[84:115]:
     topic_repos = topic['repos']
     top_dev_list = list()
     
