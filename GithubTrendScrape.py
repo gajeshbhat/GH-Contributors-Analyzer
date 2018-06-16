@@ -87,8 +87,16 @@ def parse_topic_info():
             realted_tag_list = realted_tag_div.findAll('a',{'class':'topic-tag topic-tag-link f6 my-1'})
                     
             stargazer= article.findNext('a',{'class':'d-inline-block link-gray'})
-            stargazer_count = process_star_count(str(stargazer.text))
-            stargazer_link = stargazer['href']
+            
+            stargazer_count = 0
+            stargazer_link = ''
+
+            if stargazer == None:
+                stargazer_count =int(0)
+                stargazer_link = 'N/A'
+            else:
+                stargazer_count = process_star_count(str(stargazer.text))
+                stargazer_link = stargazer['href']
 
             related_tags = list()
             

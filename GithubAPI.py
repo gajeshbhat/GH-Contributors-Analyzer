@@ -7,7 +7,7 @@ from GithubTrendScrape import client,parse_general_repo_information
 from multiprocessing import Process
 
 def get_top_contributor_list(url):
-  headers = {'Authorization': 'token %s' % getenv('GITKEY')}
+  headers = {'Authorization': 'token %s' % getenv('GITDATAEXTKEY')}
   working = False
   
   while working is False:

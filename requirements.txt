@@ -1,0 +1,5 @@
+requests
+pymongo
+multiprocessing
+bs4
+lxml
