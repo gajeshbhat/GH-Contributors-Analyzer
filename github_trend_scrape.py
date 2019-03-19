@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
 client = MongoClient('localhost',27017) # Mongo access client
-reload(sys)
-sys.setdefaultencoding('utf8') # Prevent unicode error
+# Prevent unicode error
 
 def parse_and_insert_topic():
     summary_page_before_scroll = requests.get("https://github.com/topics")
@@ -50,14 +49,14 @@ def process_star_count(x):
             total_stars = float(x.replace('B', '')) * 1000000000 # convert B to a Billion
     else:
             total_stars = int(x) # Less than 1000
-        
+
     return int(total_stars)
 
 def parse_topic_info():
     topic_dicts = client.topics_ref.topics_list.find({}).batch_size(16)
-    
+
     if(topic_dicts == {}):
-        print "Topic List empty!"
+        print ("Topic List empty!")
 
     topic_desc_list = list()
 
@@ -72,7 +71,7 @@ def parse_topic_info():
                 working = False
         topics_page_soup = BeautifulSoup(topics_page.content,"html.parser")
         outer_div_soup = topics_page_soup.findAll('article',{'class':'border-bottom border-gray-light py-4'})
-                
+
         repo_list = list()
 
         for article in outer_div_soup:
@@ -82,12 +81,12 @@ def parse_topic_info():
                 repo_lang = article.find('span', {'itemprop':'programmingLanguage'}).text
             except:
                 repo_lang = "N/A"
-                    
+
             realted_tag_div = article.findNext('div',{'class':'topics-row-container d-flex flex-wrap flex-items-center f6 mb-3'})
             realted_tag_list = realted_tag_div.findAll('a',{'class':'topic-tag topic-tag-link f6 my-1'})
-                    
+
             stargazer= article.findNext('a',{'class':'d-inline-block link-gray'})
-            
+
             stargazer_count = 0
             stargazer_link = ''
 
@@ -99,18 +98,18 @@ def parse_topic_info():
                 stargazer_link = stargazer['href']
 
             related_tags = list()
-            
+
             for tags in realted_tag_list:
                 related_tags.append(str(tags.text).strip())
-                    
+
             repo_info={
                 'raw_link' : repo_link,
                 'description' : str(repo_desc).strip(),
                 'lang':str(repo_lang).strip(),
                 'stars':str(stargazer_count).strip(),
                 'related_tags' : related_tags
-                }    
-            
+                }
+
             repo_list.append(repo_info)
 
         topics_dict={
@@ -119,18 +118,18 @@ def parse_topic_info():
         }
 
         topic_desc_list.append(topics_dict)
-            
+
     client.topics_ref.topics_details.insert_many(topic_desc_list) # write all the topics into db
     return True
-        
+
 def refresh_topic_details():
     client.topics_ref.topics_details.delete_many({})
     parse_topic_info()
     return True
-        
+
 def parse_general_repo_information(url=None):
     if(url == None):
-        print "Enter a valid url"
+        print ("Enter a valid url")
         return False
     else:
         working = False
@@ -144,19 +143,19 @@ def parse_general_repo_information(url=None):
         repo_page_soup = BeautifulSoup(repo_page.content,"lxml")
         all_repo_info = repo_page_soup.find('ul',{'class':'numbers-summary'}).findAll('li')
         all_repo_list = list()
-                
+
         for value in all_repo_info:
             all_repo_list.append(value.findNext('span',{'class':'num text-emphasized'}))
-                
+
         TAG_RE = re.compile(r'<[^>]+>') #Regular exp to cleanup the span tag
-                
+
         desc_data = ''
-        
+
         if repo_page_soup.find('span',{'itemprop':'about'}) == None:
             desc_data = 'N/A'
         else:
             desc_data = str(repo_page_soup.find('span',{'itemprop':'about'}).text).strip()
-        
+
         repo_info_dict={
                     "repo_name":str(repo_page_soup.find('strong',{'itemprop':'name'}).find('a').text),
                     "repo_link":url,
