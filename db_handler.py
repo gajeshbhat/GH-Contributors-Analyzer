@@ -27,7 +27,7 @@ class DBHandlers():
         try:
             cursor.remove()
         except Exception as e:
-            self.log_message("Error in insert_item()" + "\n" + str(traceback.format_exc()))
+            self.log_message("Error in remove() on a collection" + "\n" + str(traceback.format_exc()))
 
     def insert_item_github(self,item):
         db_client = self.get_db_new_instance()
