@@ -197,7 +197,7 @@ class GithubParser():
         clean_repo_detail = self.get_clean_repo_details(repo_page_soup,repo_url)
         return clean_repo_detail
 
-    def get_api_response_default():
+    def get_api_response_default(self):
         return {"message" : "Not found!"}
 
     def get_top_contributor_list(self,url):
@@ -252,12 +252,10 @@ class GithubParser():
             db_obj.insert_item_github(topic_details_formatted)
 
     def parse_full_data(self):
-        full_result = list()
         slice_list = self.get_slice_list(self.MAX_TOPIC_ENTRIES,self.EACH_SLICE_SIZE)
         for i in range(1,len(slice_list)):
             current_process = Process(target=self.get_repos_of_topic,args=(slice_list[i-1],slice_list[i]))
             current_process.start()
-        return full_result
 
     def hard_refresh(self):
         db_obj = DBHandlers()

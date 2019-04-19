@@ -1,3 +1,3 @@
 from github_parser import GithubParser
-test_parse = GithubParser()
-test_parse.parse_full_data()
+github_parse = GithubParser()
+github_parse.hard_refresh()
