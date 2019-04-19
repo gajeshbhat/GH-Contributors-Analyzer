@@ -1,5 +1,7 @@
 *.pyc
 *.swo
 *.swp
+*.log
+*.gz
 venv/
 __pycache__/
