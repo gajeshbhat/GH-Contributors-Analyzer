@@ -26,7 +26,7 @@ A modern, comprehensive tool for analyzing GitHub repositories and their top con
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/gajeshbhat/GH-Contributors-Analyzer.git
    cd GH-Contributors-Analyzer
    ```
 
